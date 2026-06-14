@@ -1,68 +1,1133 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Ulquiorra Cifer</title>
-    <style>
-      body {
-        background-color: black;
-        color: White;
-        font-family: sans-serif;
-        text-align: center;
-        padding: 50px;
-      }
-      h1 { color: #3fd34e; } /* Verde do Cero */
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZONA MORTA — RPG Sobrevivência</title>
+<link href="https://fonts.googleapis.com/css2?family=Creepster&family=Share+Tech+Mono&family=Oswald:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080808;
+    --surface: #111109;
+    --panel: #181810;
+    --border: #2a2a18;
+    --red: #8B1A1A;
+    --red-bright: #c0282a;
+    --green: #4a7c59;
+    --green-bright: #6bba82;
+    --amber: #c8a840;
+    --text: #c8b89a;
+    --text-dim: #7a6e5a;
+    --text-bright: #e8d8ba;
+    --scanline: rgba(0,0,0,0.15);
+  }
 
-        .caixa {
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-            border: 1px solid #333;
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
 
-            padding: 20px;
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      var(--scanline) 2px,
+      var(--scanline) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
 
-            display: inline-block;
+  /* Noise texture */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.5;
+  }
 
-            text-align: left;
+  /* ─── HEADER ─── */
+  header {
+    text-align: center;
+    padding: 28px 20px 20px;
+    border-bottom: 2px solid var(--red);
+    position: relative;
+    background: linear-gradient(180deg, #1a0505 0%, transparent 100%);
+  }
 
-        }
+  header::before {
+    content: '⚠ TRANSMISSÃO DE EMERGÊNCIA ⚠';
+    display: block;
+    font-size: 10px;
+    color: var(--red-bright);
+    letter-spacing: 4px;
+    margin-bottom: 8px;
+    animation: blink 2.5s step-end infinite;
+  }
 
-    </style>
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+  }
 
+  header h1 {
+    font-family: 'Creepster', cursive;
+    font-size: clamp(36px, 8vw, 72px);
+    color: var(--red-bright);
+    text-shadow: 0 0 30px rgba(192,40,42,0.6), 0 0 60px rgba(192,40,42,0.2);
+    letter-spacing: 6px;
+    line-height: 1;
+  }
+
+  header .subtitle {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 8px;
+    margin-top: 6px;
+    text-transform: uppercase;
+  }
+
+  /* ─── TABS ─── */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    padding: 16px 20px 0;
+    border-bottom: 2px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .tab {
+    padding: 10px 24px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-bottom: none;
+    color: var(--text-dim);
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    top: 2px;
+  }
+
+  .tab:hover { color: var(--text); border-color: var(--green); }
+
+  .tab.active {
+    background: var(--panel);
+    color: var(--green-bright);
+    border-color: var(--green);
+    border-bottom-color: var(--panel);
+  }
+
+  .tab .tab-icon { margin-right: 6px; }
+
+  /* ─── MAIN CONTENT ─── */
+  .content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 28px 16px 60px;
+  }
+
+  .panel-section { display: none; }
+  .panel-section.active { display: block; }
+
+  /* ─── PANEL CARD ─── */
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 24px;
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: var(--green);
+  }
+
+  .card.red-accent::before { background: var(--red-bright); }
+  .card.amber-accent::before { background: var(--amber); }
+
+  .card-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: var(--green-bright);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .card-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ─── FICHA ─── */
+  .char-name-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    align-items: flex-end;
+  }
+
+  .field-group { flex: 1; }
+
+  .field-label {
+    font-size: 9px;
+    letter-spacing: 4px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .field-input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-bright);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    padding: 10px 14px;
+    width: 100%;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  .field-input:focus { border-color: var(--green); }
+
+  /* HP bar */
+  .hp-section { margin-bottom: 24px; }
+
+  .hp-display {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 10px;
+  }
+
+  .hp-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+    letter-spacing: 3px;
+    color: var(--red-bright);
+  }
+
+  .hp-values { display: flex; align-items: center; gap: 8px; }
+
+  .hp-current {
+    font-family: 'Creepster', cursive;
+    font-size: 42px;
+    color: var(--red-bright);
+    text-shadow: 0 0 20px rgba(192,40,42,0.5);
+    line-height: 1;
+    min-width: 60px;
+    text-align: right;
+  }
+
+  .hp-sep { color: var(--text-dim); font-size: 20px; }
+
+  .hp-max { font-size: 18px; color: var(--text-dim); }
+
+  .hp-bar-track {
+    height: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .hp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--red) 0%, var(--red-bright) 100%);
+    transition: width 0.4s ease;
+  }
+
+  .hp-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .hp-btn {
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .hp-btn:hover { border-color: var(--red-bright); color: var(--red-bright); }
+
+  .hp-adj-input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-bright);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    padding: 6px 10px;
+    width: 70px;
+    outline: none;
+    text-align: center;
+  }
+
+  /* Attributes grid */
+  .attrs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+  }
+
+  .attr-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 16px 14px 14px;
+    text-align: center;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+
+  .attr-card:hover { border-color: var(--green); }
+
+  .attr-name {
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  .attr-icon {
+    font-size: 18px;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .attr-value {
+    font-family: 'Creepster', cursive;
+    font-size: 38px;
+    color: var(--green-bright);
+    line-height: 1;
+    cursor: pointer;
+    display: block;
+  }
+
+  .attr-controls { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
+
+  .attr-btn {
+    width: 26px; height: 26px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .attr-btn:hover { border-color: var(--green-bright); color: var(--green-bright); }
+
+  .attr-mod {
+    font-size: 10px;
+    color: var(--amber);
+    margin-top: 4px;
+    letter-spacing: 1px;
+  }
+
+  /* Notes */
+  .char-notes {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-bright);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    padding: 12px;
+    width: 100%;
+    resize: vertical;
+    outline: none;
+    min-height: 80px;
+    line-height: 1.6;
+  }
+
+  .char-notes:focus { border-color: var(--green); }
+
+  /* ─── DICE ─── */
+  .dice-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .dice-btn {
+    aspect-ratio: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Creepster', cursive;
+    font-size: 22px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dice-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--red-bright);
+    transform: scaleY(0);
+    transform-origin: bottom;
+    transition: transform 0.2s;
+    z-index: 0;
+  }
+
+  .dice-btn:hover::before { transform: scaleY(1); }
+  .dice-btn:hover { color: white; border-color: var(--red-bright); }
+  .dice-btn > * { position: relative; z-index: 1; }
+
+  .dice-btn.active-die { border-color: var(--green-bright); color: var(--green-bright); }
+
+  .dice-label { font-size: 10px; letter-spacing: 2px; color: inherit; opacity: 0.7; }
+
+  .dice-qty-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .qty-label { font-size: 10px; letter-spacing: 3px; color: var(--text-dim); }
+
+  .qty-btn {
+    width: 32px; height: 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .qty-btn:hover { border-color: var(--green); color: var(--green-bright); }
+
+  .qty-display {
+    font-family: 'Creepster', cursive;
+    font-size: 26px;
+    color: var(--amber);
+    min-width: 32px;
+    text-align: center;
+  }
+
+  .roll-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--red);
+    border: 2px solid var(--red-bright);
+    color: white;
+    font-family: 'Oswald', sans-serif;
+    font-size: 16px;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 20px;
+  }
+
+  .roll-btn:hover { background: var(--red-bright); box-shadow: 0 0 30px rgba(192,40,42,0.4); }
+  .roll-btn:active { transform: scale(0.98); }
+
+  .roll-result {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px;
+    text-align: center;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .result-total {
+    font-family: 'Creepster', cursive;
+    font-size: 72px;
+    line-height: 1;
+    color: var(--amber);
+    text-shadow: 0 0 30px rgba(200, 168, 64, 0.5);
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  @keyframes popIn {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .result-critical {
+    color: var(--green-bright) !important;
+    text-shadow: 0 0 30px rgba(107,186,130,0.6) !important;
+  }
+
+  .result-fumble {
+    color: var(--red-bright) !important;
+    text-shadow: 0 0 30px rgba(192,40,42,0.6) !important;
+  }
+
+  .result-detail { font-size: 12px; color: var(--text-dim); letter-spacing: 2px; }
+  .result-individual { font-size: 11px; color: var(--text-dim); }
+
+  .result-badge {
+    font-family: 'Oswald', sans-serif;
+    font-size: 12px;
+    letter-spacing: 4px;
+    padding: 4px 14px;
+    border: 1px solid;
+    margin-top: 4px;
+  }
+
+  .badge-crit { color: var(--green-bright); border-color: var(--green-bright); }
+  .badge-fumble { color: var(--red-bright); border-color: var(--red-bright); }
+
+  .dice-history {
+    margin-top: 16px;
+    max-height: 140px;
+    overflow-y: auto;
+  }
+
+  .history-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .history-item:last-child { border-bottom: none; }
+
+  /* ─── INVENTÁRIO ─── */
+  .inv-add-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .inv-input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-bright);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .inv-input:focus { border-color: var(--green); }
+  .inv-name { flex: 1; min-width: 160px; }
+  .inv-qty { width: 80px; text-align: center; }
+
+  .inv-add-btn {
+    padding: 10px 20px;
+    background: var(--green);
+    border: 1px solid var(--green-bright);
+    color: white;
+    font-family: 'Oswald', sans-serif;
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .inv-add-btn:hover { background: var(--green-bright); box-shadow: 0 0 20px rgba(107,186,130,0.3); }
+
+  .category-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .cat-tab {
+    padding: 5px 14px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .cat-tab:hover { border-color: var(--amber); color: var(--amber); }
+  .cat-tab.active { border-color: var(--amber); color: var(--amber); background: rgba(200,168,64,0.08); }
+
+  .inv-list { display: flex; flex-direction: column; gap: 4px; }
+
+  .inv-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    transition: border-color 0.15s;
+    animation: slideIn 0.2s ease;
+  }
+
+  @keyframes slideIn {
+    from { transform: translateX(-10px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  .inv-item:hover { border-color: var(--border); background: #161610; }
+
+  .inv-item-icon {
+    font-size: 18px;
+    width: 28px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .inv-item-name {
+    flex: 1;
+    font-size: 13px;
+    color: var(--text-bright);
+  }
+
+  .inv-item-cat {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    padding: 2px 8px;
+    border: 1px solid var(--border);
+  }
+
+  .inv-qty-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .inv-qty-btn {
+    width: 22px; height: 22px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 14px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .inv-qty-btn:hover { border-color: var(--amber); color: var(--amber); }
+
+  .inv-qty-num {
+    font-family: 'Creepster', cursive;
+    font-size: 20px;
+    color: var(--amber);
+    min-width: 28px;
+    text-align: center;
+  }
+
+  .inv-del-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px 8px;
+    transition: color 0.15s;
+  }
+
+  .inv-del-btn:hover { color: var(--red-bright); }
+
+  .inv-empty {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-dim);
+    font-size: 12px;
+    letter-spacing: 3px;
+    border: 1px dashed var(--border);
+  }
+
+  .inv-stats {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .inv-stat {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+  }
+
+  .inv-stat span {
+    color: var(--green-bright);
+    font-size: 16px;
+  }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--green); }
+
+  /* ─── FOOTER STATUS ─── */
+  .status-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 6px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    z-index: 200;
+  }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    background: var(--green-bright);
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulse 2s infinite;
+    margin-right: 6px;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  @media (max-width: 600px) {
+    .attrs-grid { grid-template-columns: repeat(3, 1fr); }
+    .dice-grid { grid-template-columns: repeat(4, 1fr); }
+    header h1 { font-size: 36px; }
+    .tab { padding: 8px 12px; font-size: 10px; letter-spacing: 1px; }
+  }
+</style>
 </head>
-
 <body>
 
+<header>
+  <h1>ZONA MORTA</h1>
+  <p class="subtitle">Sistema de Sobrevivência &bull; Apocalipse Zumbi</p>
+</header>
 
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('ficha')">
+    <span class="tab-icon">☠</span> FICHA
+  </button>
+  <button class="tab" onclick="switchTab('dados')">
+    <span class="tab-icon">🎲</span> DADOS
+  </button>
+  <button class="tab" onclick="switchTab('inv')">
+    <span class="tab-icon">🎒</span> INVENTÁRIO
+  </button>
+</div>
 
-    <h1>Ulquiorra Cifer</h1>
+<div class="content">
 
-    <p><i>"O que meus olhos não veem, não existe."</i></p>
+  <!-- ══════════ FICHA ══════════ -->
+  <div class="panel-section active" id="tab-ficha">
 
-
-
-    <div class="caixa">
-
-        <h3>Perfil:</h3>
-
-        <ul>
-
-            <li><strong>Posto:</strong> 4ª Espada</li>
-
-            <li><strong>Zanpakutō:</strong> Murciélago</li>
-
-            <li><strong>Buraco Hollow:</strong> Pescoço/Peito</li>
-
-            <li><strong>Poder Principal:</strong> Regeneração e Cero Oscuras</li>
-
-        </ul>
-
+    <div class="card">
+      <div class="card-title">☠ IDENTIFICAÇÃO DO SOBREVIVENTE</div>
+      <div class="char-name-row">
+        <div class="field-group" style="flex:2">
+          <label class="field-label">Nome do Personagem</label>
+          <input class="field-input" id="char-name" placeholder="Ex: Marcus 'Cobra' Silva" oninput="saveData()">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Perícia</label>
+          <input class="field-input" id="char-class" placeholder="Ex: Atirador" oninput="saveData()">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Nível</label>
+          <input class="field-input" id="char-level" placeholder="1" type="number" min="1" oninput="saveData()">
+        </div>
+      </div>
+      <div>
+        <label class="field-label">Histórico / Origem</label>
+        <input class="field-input" id="char-bg" placeholder="Ex: Ex-policial, sobrevivente do bunker 7..." oninput="saveData()">
+      </div>
     </div>
 
 
 
-    <p>Este é um site sobre o Ulquiorra Cifer de Bleach.</p>
+    <!-- ATRIBUTOS -->
+    <div class="card">
+      <div class="card-title">⚡ ATRIBUTOS</div>
+      <div class="attrs-grid" id="attrs-grid"></div>
+    </div>
 
+    <!-- ANOTAÇÕES -->
+    <div class="card">
+      <div class="card-title">📋 ANOTAÇÕES DO SOBREVIVENTE</div>
+      <textarea class="char-notes" id="char-notes" placeholder="Habilidades especiais, condições, missões em andamento, aliados, locais conhecidos..." oninput="saveData()"></textarea>
+    </div>
 
+  </div>
 
+  <!-- ══════════ DADOS ══════════ -->
+  <div class="panel-section" id="tab-dados">
+
+    <div class="card red-accent">
+      <div class="card-title" style="color:var(--red-bright)">🎲 ESCOLHA O DADO</div>
+      <div class="dice-grid" id="dice-grid"></div>
+
+      <div class="dice-qty-row">
+        <span class="qty-label">QUANTIDADE:</span>
+        <button class="qty-btn" onclick="changeQty(-1)">−</button>
+        <span class="qty-display" id="qty-display">1</span>
+        <button class="qty-btn" onclick="changeQty(1)">+</button>
+        <span style="font-size:10px;color:var(--text-dim);margin-left:8px" id="current-die-label">D20 SELECIONADO</span>
+      </div>
+
+      <button class="roll-btn" onclick="rollDice()">⚀ ROLAR OS DADOS</button>
+
+      <div class="roll-result" id="roll-result">
+        <span style="color:var(--text-dim);font-size:11px;letter-spacing:3px">— AGUARDANDO ROLAGEM —</span>
+      </div>
+
+      <div class="dice-history" id="dice-history"></div>
+    </div>
+
+  </div>
+
+  <!-- ══════════ INVENTÁRIO ══════════ -->
+  <div class="panel-section" id="tab-inv">
+
+    <div class="card">
+      <div class="card-title">🎒 ADICIONAR ITEM</div>
+      <div class="inv-add-row">
+        <input class="inv-input inv-name" id="inv-name-input" placeholder="Nome do item..." onkeydown="if(event.key==='Enter') addItem()">
+        <input class="inv-input inv-qty" id="inv-qty-input" type="number" placeholder="Qtd" value="1" min="1">
+        <select class="inv-input" id="inv-cat-input" style="min-width:130px;cursor:pointer">
+          <option value="🔫 Arma">🔫 Arma</option>
+          <option value="💊 Medicina">💊 Medicina</option>
+          <option value="🥫 Comida">🥫 Comida</option>
+          <option value="🔧 Ferramenta">🔧 Ferramenta</option>
+          <option value="🧥 Equipamento">🧥 Equipamento</option>
+          <option value="📦 Misc">📦 Misc</option>
+        </select>
+        <button class="inv-add-btn" onclick="addItem()">+ ADICIONAR</button>
+      </div>
+    </div>
+
+    <div class="card amber-accent">
+      <div class="card-title" style="color:var(--amber)">📦 CARGA DO SOBREVIVENTE</div>
+      <div class="inv-stats">
+        <div class="inv-stat">ITENS: <span id="inv-count">0</span></div>
+        <div class="inv-stat">TOTAL UNIDADES: <span id="inv-total">0</span></div>
+      </div>
+      <div class="category-tabs" id="cat-tabs">
+        <button class="cat-tab active" onclick="filterCat('TODOS',this)">TODOS</button>
+        <button class="cat-tab" onclick="filterCat('🔫 Arma',this)">🔫 ARMAS</button>
+        <button class="cat-tab" onclick="filterCat('💊 Medicina',this)">💊 MEDICINA</button>
+        <button class="cat-tab" onclick="filterCat('🥫 Comida',this)">🥫 COMIDA</button>
+        <button class="cat-tab" onclick="filterCat('🔧 Ferramenta',this)">🔧 FERRAMENTAS</button>
+        <button class="cat-tab" onclick="filterCat('🧥 Equipamento',this)">🧥 EQUIP</button>
+        <button class="cat-tab" onclick="filterCat('📦 Misc',this)">📦 MISC</button>
+      </div>
+      <div class="inv-list" id="inv-list"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Status bar -->
+<div class="status-bar">
+  <span><span class="status-dot"></span>SISTEMA ONLINE</span>
+  <span id="char-status-name">— SEM PERSONAGEM —</span>
+  <span>ZONA MORTA v1.0</span>
+</div>
+
+<script>
+// ─── DATA ───
+let data = {
+  charName: '', charClass: '', charLevel: 1, charBg: '',
+  charNotes: '',
+  hp: { current: 20, max: 20 },
+  attrs: {
+    forca:       { value: 10, label: 'FORÇA',        icon: '💪' },
+    agilidade:   { value: 10, label: 'AGILIDADE',    icon: '🏃' },
+    precisao:    { value: 10, label: 'PRECISÃO',     icon: '🎯' },
+    inteligencia:{ value: 10, label: 'INTELIGÊNCIA', icon: '🧠' },
+    habilidade:  { value: 10, label: 'HABILIDADE',   icon: '🔧' },
+    armadura:    { value: 10, label: 'ARMADURA',     icon: '🛡' },
+  },
+  inventory: [],
+  diceHistory: [],
+};
+
+let currentDie = 20;
+let diceQty = 1;
+let currentFilter = 'TODOS';
+
+const DICE = [4, 6, 8, 10, 12, 20, 100];
+
+// ─── SAVE/LOAD ───
+function saveData() {
+  // sync fields to data
+  data.charName   = document.getElementById('char-name').value;
+  data.charClass  = document.getElementById('char-class').value;
+  data.charLevel  = document.getElementById('char-level').value;
+  data.charBg     = document.getElementById('char-bg').value;
+  data.charNotes  = document.getElementById('char-notes').value;
+  try { localStorage.setItem('zdm-data', JSON.stringify(data)); } catch(e) {}
+  updateStatusBar();
+}
+
+function loadData() {
+  try {
+    const saved = localStorage.getItem('zdm-data');
+    if (saved) data = JSON.parse(saved);
+  } catch(e) {}
+}
+
+// ─── TABS ───
+function switchTab(name) {
+  document.querySelectorAll('.panel-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// ─── STATUS BAR ───
+function updateStatusBar() {
+  const name = data.charName || '— SEM PERSONAGEM —';
+  document.getElementById('char-status-name').textContent = name;
+}
+
+// ─── RENDER FICHA ───
+function renderFicha() {
+  document.getElementById('char-name').value  = data.charName;
+  document.getElementById('char-class').value = data.charClass;
+  document.getElementById('char-level').value = data.charLevel;
+  document.getElementById('char-bg').value    = data.charBg;
+  document.getElementById('char-notes').value = data.charNotes;
+  renderAttrs();
+}
+
+// ─── ATTRS ───
+function renderAttrs() {
+  const grid = document.getElementById('attrs-grid');
+  grid.innerHTML = '';
+  Object.entries(data.attrs).forEach(([key, attr]) => {
+    const mod = Math.floor((attr.value - 10) / 2);
+    const modStr = (mod >= 0 ? '+' : '') + mod;
+    grid.innerHTML += `
+      <div class="attr-card">
+        <span class="attr-icon">${attr.icon}</span>
+        <span class="attr-name">${attr.label}</span>
+        <span class="attr-value">${attr.value}</span>
+        <div class="attr-mod">${modStr}</div>
+        <div class="attr-controls">
+          <button class="attr-btn" onclick="changeAttr('${key}',-1)">−</button>
+          <button class="attr-btn" onclick="changeAttr('${key}',1)">+</button>
+        </div>
+      </div>`;
+  });
+}
+
+function changeAttr(key, dir) {
+  data.attrs[key].value = Math.max(0, Math.min(30, data.attrs[key].value + dir));
+  renderAttrs();
+  saveData();
+}
+
+// ─── DICE ───
+function renderDice() {
+  const grid = document.getElementById('dice-grid');
+  grid.innerHTML = '';
+  DICE.forEach(d => {
+    grid.innerHTML += `
+      <button class="dice-btn ${d === currentDie ? 'active-die' : ''}" onclick="selectDie(${d})">
+        <span style="font-size:26px">⚂</span>
+        <span>D${d}</span>
+        <span class="dice-label">dado</span>
+      </button>`;
+  });
+  document.getElementById('current-die-label').textContent = `D${currentDie} SELECIONADO`;
+}
+
+function selectDie(d) {
+  currentDie = d;
+  renderDice();
+}
+
+function changeQty(dir) {
+  diceQty = Math.max(1, Math.min(20, diceQty + dir));
+  document.getElementById('qty-display').textContent = diceQty;
+}
+
+function rollDice() {
+  const rolls = [];
+  for (let i = 0; i < diceQty; i++) {
+    rolls.push(Math.floor(Math.random() * currentDie) + 1);
+  }
+  const total = rolls.reduce((a, b) => a + b, 0);
+  const isCrit = currentDie === 20 && rolls.includes(20);
+  const isFumble = currentDie === 20 && rolls.includes(1) && !isCrit;
+
+  const resultEl = document.getElementById('roll-result');
+  let badge = '';
+  let totalClass = '';
+  if (isCrit) { badge = `<span class="result-badge badge-crit">⚡ CRÍTICO!</span>`; totalClass = 'result-critical'; }
+  if (isFumble) { badge = `<span class="result-badge badge-fumble">💀 FALHA CRÍTICA!</span>`; totalClass = 'result-fumble'; }
+
+  const indStr = diceQty > 1 ? `<div class="result-individual">[${rolls.join(', ')}]</div>` : '';
+
+  resultEl.innerHTML = `
+    <span class="result-total ${totalClass}">${total}</span>
+    <div class="result-detail">${diceQty}D${currentDie}</div>
+    ${indStr}
+    ${badge}`;
+
+  // history
+  const time = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const histEntry = { dice: `${diceQty}D${currentDie}`, total, rolls, time, flag: isCrit ? 'CRÍTICO' : isFumble ? 'FALHA' : '' };
+  data.diceHistory.unshift(histEntry);
+  if (data.diceHistory.length > 20) data.diceHistory.pop();
+  renderDiceHistory();
+  try { localStorage.setItem('zdm-data', JSON.stringify(data)); } catch(e) {}
+}
+
+function renderDiceHistory() {
+  const el = document.getElementById('dice-history');
+  if (!data.diceHistory.length) { el.innerHTML = ''; return; }
+  el.innerHTML = data.diceHistory.map(h => `
+    <div class="history-item">
+      <span>${h.time}</span>
+      <span>${h.dice}</span>
+      <span style="color:var(--amber)">${h.total}</span>
+      <span style="color:${h.flag === 'CRÍTICO' ? 'var(--green-bright)' : h.flag === 'FALHA' ? 'var(--red-bright)' : 'transparent'}">${h.flag || '—'}</span>
+    </div>`).join('');
+}
+
+// ─── INVENTÁRIO ───
+function addItem() {
+  const name = document.getElementById('inv-name-input').value.trim();
+  const qty  = parseInt(document.getElementById('inv-qty-input').value) || 1;
+  const cat  = document.getElementById('inv-cat-input').value;
+  if (!name) { document.getElementById('inv-name-input').focus(); return; }
+  data.inventory.push({ id: Date.now(), name, qty, cat });
+  document.getElementById('inv-name-input').value = '';
+  document.getElementById('inv-qty-input').value = '1';
+  renderInventory();
+  saveData();
+}
+
+function changeInvQty(id, dir) {
+  const item = data.inventory.find(i => i.id === id);
+  if (!item) return;
+  item.qty = Math.max(0, item.qty + dir);
+  if (item.qty === 0) {
+    if (!confirm(`Remover "${item.name}" do inventário?`)) { item.qty = 1; }
+    else { data.inventory = data.inventory.filter(i => i.id !== id); }
+  }
+  renderInventory();
+  saveData();
+}
+
+function deleteItem(id) {
+  data.inventory = data.inventory.filter(i => i.id !== id);
+  renderInventory();
+  saveData();
+}
+
+function filterCat(cat, btn) {
+  currentFilter = cat;
+  document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderInventory();
+}
+
+function renderInventory() {
+  const list = document.getElementById('inv-list');
+  const filtered = currentFilter === 'TODOS' ? data.inventory : data.inventory.filter(i => i.cat === currentFilter);
+
+  document.getElementById('inv-count').textContent = data.inventory.length;
+  document.getElementById('inv-total').textContent = data.inventory.reduce((a, i) => a + i.qty, 0);
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="inv-empty">☠ NENHUM ITEM ENCONTRADO<br><span style="font-size:10px">Adicione itens ao inventário acima</span></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(item => `
+    <div class="inv-item">
+      <span class="inv-item-icon">${item.cat.split(' ')[0]}</span>
+      <span class="inv-item-name">${item.name}</span>
+      <span class="inv-item-cat">${item.cat.split(' ').slice(1).join(' ')}</span>
+      <div class="inv-qty-ctrl">
+        <button class="inv-qty-btn" onclick="changeInvQty(${item.id},-1)">−</button>
+        <span class="inv-qty-num">${item.qty}</span>
+        <button class="inv-qty-btn" onclick="changeInvQty(${item.id},1)">+</button>
+      </div>
+      <button class="inv-del-btn" onclick="deleteItem(${item.id})" title="Remover">✕</button>
+    </div>`).join('');
+}
+
+// ─── INIT ───
+loadData();
+renderFicha();
+renderDice();
+renderDiceHistory();
+renderInventory();
+updateStatusBar();
+</script>
 </body>
-
 </html>
